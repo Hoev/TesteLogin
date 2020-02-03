@@ -1,10 +1,10 @@
-{ **
-  *  TEvPassword
-  *
-  *  Copyright Sebastiï¿½o Elivaldo Ribeiro
-  *  http://www.elivaldo.com.br
-  *  e-mail: falecom@elivaldo.com.br
-  * }
+{**
+*  TEvPassword
+*
+*  Copyright Sebastião Elivaldo Ribeiro
+*  http://www.elivaldo.com.br
+*  e-mail: falecom@elivaldo.com.br
+*}
 
 unit EPaswd;
 
@@ -46,7 +46,7 @@ type
     FOnRecognized: TNotifyEvent;
     FOnValidate: TEvValidateEvent;
     FOnError: TEvErrorEvent;
-    // variï¿½veis adicionais
+    // variáveis adicionais
     FrmPaswd: TEvFrmPaswd;
     FLastPass: TDateTime;
     procedure AllowRecognizeUser;
@@ -86,7 +86,7 @@ type
     property OnError: TEvErrorEvent read FOnError write FOnError;
   end;
 
-  { TEvFrmPaswd - formulï¿½rio de entrada }
+  { TEvFrmPaswd - formulário de entrada}
   TEvFrmPaswd = class(TForm)
     PanCenter: TPanel;
     LabUName: TLabel;
@@ -127,10 +127,10 @@ implementation
 {$R *.RES}
 
 resourcestring
-  SFormCaption = 'Senha de autorizaï¿½ï¿½o';
-  SMessage = 'Entre com um nome de usuï¿½rio e a uma senha vï¿½lida para acessar o <b>sistema<b>.';
-  SInfoEntry = 'Identificaï¿½ï¿½o';
-  SInfoReentry = 'Confirmaï¿½ï¿½o';
+  SFormCaption   = 'Senha de autorização';
+  SMessage       = 'Entre com um nome de usuário e a uma senha válida para acessar o <b>sistema<b>.';
+  SInfoEntry     = 'Identificação';
+  SInfoReentry   = 'Confirmação';
 
 const
   ONE_SECOND     = 0.000011574;
@@ -139,9 +139,9 @@ const
   SF_RECOGNIZING = 2;
 
 
-  // ------------------------------------------------------------------------------------
-  // Formulï¿½rio TEvFrmPaswd
-  // ------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------
+//                              Formulário TEvFrmPaswd
+//------------------------------------------------------------------------------------
 
 
 // FormActivate
@@ -162,9 +162,12 @@ end;
 // FormShow
 procedure TEvFrmPaswd.FormShow(Sender: TObject);
 begin
-  // Colocando a empresa no rodapï¿½
-  pnBot.Caption := fVariaveis.vEmpresaFantasia;
-  fPrincipal.KeyNavigator.Active := False;
+  FTopForm := nil;
+  if (Screen.ActiveForm <> nil) and (Screen.ActiveForm.FormStyle = fsStayOnTop) then
+    begin
+      Screen.ActiveForm.FormStyle := fsNormal;
+      FTopForm := Screen.ActiveForm;
+    end;
 end;
 
 
@@ -185,52 +188,9 @@ begin
       EdtUName.SetFocus;
     end
   else
-  begin
-    EdtPaswd.SelectAll;
-    EdtPaswd.SetFocus;
-  end;
-end;
-
-// EdtsChange
-procedure TEvFrmPaswd.EdtPaswdKeyPress(Sender: TObject; var Key: Char);
-begin
-  If Key = #13 then
-  begin
-    try
-      TInterfaces.TelaAguardeShow;
-
-      if BtnOK.Enabled = True then
-      begin
-        BtnOK.Enabled := False;
-        // faz a validaï¿½ï¿½o ou reconhecimento
-        Valid := False;
-        if FStatusForm = SF_RECOGNIZING then
-        begin
-          if EdtPaswd.Text = FComponent.Password then
-            Valid := True
-          else
-          begin
-            MessageBeep(0);
-            EdtPaswd.Text := '';
-          end;
-        end
-        else if Assigned(FComponent.OnValidate) then
-          FComponent.OnValidate(Self, EdtUName.Text, EdtPaswd.Text, Valid);
-
-        // controle de tentativas
-        if Valid then
-          ModalResult := mrOk
-        else if (FLoopCount >= FComponent.TryCount) and (FComponent.TryCount <> 0) then
-          ModalResult := mrCancel
-        else
-        begin
-          ActiveFocus;
-          Inc(FLoopCount);
-        end;
-        BtnOK.Enabled := True;
-      end;
-    finally
-      TInterfaces.TelaAguardeHide;
+    begin
+      EdtPaswd.SelectAll;
+      EdtPaswd.SetFocus;
     end;
 end;
 
@@ -247,36 +207,11 @@ procedure TEvFrmPaswd.BtnOkClick(Sender: TObject);
 var
   Valid: Boolean;
 begin
-  Close;
-end;
-
-procedure TEvFrmPaswd.BtnCancelMouseEnter(Sender: TObject);
-begin
-  BtnCancel.Color := clWhite;
-  BtnCancel.Font.Color := clBlack;
-end;
-
-procedure TEvFrmPaswd.BtnCancelMouseLeave(Sender: TObject);
-begin
-  BtnCancel.Color := $004D9300;
-  BtnCancel.Font.Color := clWhite;
-end;
-
-procedure TEvFrmPaswd.BtnOKClick(Sender: TObject);
-begin
-  if BtnOK.Enabled = True then
-  begin
-    try
-      TInterfaces.TelaAguardeShow;
-
-      BtnOK.Enabled := False;
-      // faz a validaï¿½ï¿½o ou reconhecimento
-      Valid := False;
-      if FStatusForm = SF_RECOGNIZING then
-      begin
-        if EdtPaswd.Text = FComponent.Password then
-          Valid := True
-        else
+  // faz a validação ou reconhecimento
+  Valid := False;
+  if FStatusForm = SF_RECOGNIZING then
+    begin
+      if EdtPaswd.Text = FComponent.Password then
         begin
           Valid := True;
           if Assigned(FComponent.FOnRecognized) then
@@ -317,7 +252,46 @@ var
 begin
   Caption := FComponent.Caption;
 
-  // ajustes dos edits para login ou confirmaï¿½ï¿½o
+  // cor, fonte e tamanho do formulário
+  Color := FComponent.Color;
+  Font.Assign(FComponent.Font);
+  W := Canvas.TextHeight('W');
+  ClientWidth := 28 * W;
+
+  // carrega imagem e posiciona
+  ImgIcon.Picture.Assign(FComponent.Picture);
+  ImgBack.Height := Max(54, ImgIcon.Height + FComponent.Indent);
+  ImgIcon.Top := (ImgBack.Height - ImgIcon.Height) div 2;
+
+  // label de informação
+  if FStatusForm = SF_INPUTING then
+    LabInfo.Caption := SInfoEntry
+  else if FStatusForm = SF_RECOGNIZING then
+    LabInfo.Caption := SInfoReentry;
+  LabInfo.Font.Style := [fsBold];
+  LabInfo.Font.Size := Font.Size + 2;
+  LabInfo.Top := (ImgBack.Height - LabInfo.Height) div 2;
+
+  // mensagem
+  if FComponent.Text = '(NoText)' then
+    begin
+      RichMessage.Clear;
+      PanMessage.Height := 0
+    end
+  else
+    begin
+      RichMessage.Font.Assign(FComponent.Font);
+      RichMessage.Text := FComponent.Text;
+      RenderText(RichMessage);
+      RichMessage.SetBounds(20, 15, ClientWidth - 20, 13);
+      RichMessage.ScrollBars := ssVertical;
+      GetScrollRange(RichMessage.Handle, SB_VERT, I, H);
+      RichMessage.ScrollBars := ssNone;
+      RichMessage.SetBounds(20, 15, ClientWidth - 40, H);
+      PanMessage.Height := RichMessage.Top + H;
+    end;
+
+  // ajustes dos edits para login ou confirmação
   EdtUName.CharCase := FComponent.CharCase;
   EdtUName.Enabled := (FStatusForm = SF_INPUTING);
   EdtUName.Text := FComponent.UserName;
@@ -327,11 +301,11 @@ begin
   EdtPaswd.Top := EdtUName.Top + EdtUName.Height + 9;
   LabPaswd.Top := EdtPaswd.Top + 3;
 
-  // ajusta posiï¿½ï¿½o dos edits e botoes
+  // ajusta posição dos edits e botoes
   BtnOK.SetBounds(ClientWidth - (14 * W) - (FComponent.Indent * 2), EdtPaswd.Top + EdtPaswd.Height + 22, 7 * W, W + 10);
   BtnCancel.SetBounds(ClientWidth - (7 * W) - FComponent.Indent, BtnOK.Top, 7 * W, W + 10);
 
-  // altura do formulï¿½rio
+  // altura do formulário
   ClientHeight := ImgBack.Height + PanLine.Height + PanMessage.Height + BtnOK.Top + BtnOK.Height + FComponent.Indent;
 end;
 
@@ -402,7 +376,7 @@ begin
   FTryCount := 3;
   FOldMsgEvent := nil;
 
-  // ajusta propriedades com base no formulï¿½rio proprietï¿½rio
+  // ajusta propriedades com base no formulário proprietário
   if AOwner is TCustomForm then
     begin
       FColor := TForm(AOwner).Color;
@@ -412,13 +386,15 @@ begin
     FColor := clBtnFace;
     
   // mensagem shareware
-  if (Trim(string(bShareware)) = '') and not(csDesigning in ComponentState) then
-  begin
-    MessageBeep(MB_ICONASTERISK);
-    MessageDlg('O componente ' + ClassName + ' ï¿½ shareware, e para ' + 'utiliza-lo livremente vocï¿½ deve adquiri-lo.' +
-      #13#13 + 'www.elivaldo.com.br' + #13 + 'falecom@elivaldo.com.br', mtInformation, [mbOk], 0);
-    bShareware := '';
-  end;
+  if (Trim(string(bShareware)) = '') and not (csDesigning in ComponentState) then
+    begin
+      MessageBeep(MB_ICONASTERISK);
+      MessageDlg('O componente ' + ClassName + ' é shareware, e para ' +
+        'utiliza-lo livremente você deve adquiri-lo.' + #13#13 +
+        'www.elivaldo.com.br' + #13 +
+        'falecom@elivaldo.com.br', mtInformation, [mbOk], 0);
+      bShareware := '';
+    end;
 end;
 
 
@@ -474,7 +450,7 @@ end;
 // Execute
 procedure TEvPassword.Execute;
 begin
-  // cria formulï¿½rio e ajusta
+  // cria formulário e ajusta
   if FrmPaswd = nil then
     Application.CreateForm(TEvFrmPaswd, FrmPaswd);
   FrmPaswd.FComponent := Self;
@@ -485,7 +461,7 @@ begin
   if Assigned(FOnBeforeInput) then
     FOnBeforeInput(FrmPaswd);
 
-  // apresenta formulï¿½rio
+  // apresenta formulário
   if FrmPaswd.ShowModal = mrOk then
     begin
       FUserName := FrmPaswd.EdtUName.Text;
@@ -498,7 +474,7 @@ begin
   if Assigned(FOnAfterInput) then
     FOnAfterInput(FrmPaswd);
 
-  // habilita reconhecimento do usuï¿½rio
+  // habilita reconhecimento do usuário
   AllowRecognizeUser;
 
   FrmPaswd.Close;
@@ -554,7 +530,7 @@ end;
 // RecognizeUser
 procedure TEvPassword.RecognizeUser;
 begin
-  // cria formulï¿½rio e ajusta
+  // cria formulário e ajusta
   if FrmPaswd = nil then
     Application.CreateForm(TEvFrmPaswd, FrmPaswd);
   FrmPaswd.FComponent := Self;
