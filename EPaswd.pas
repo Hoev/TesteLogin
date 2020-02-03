@@ -18,7 +18,8 @@ type
   TEvFrmPaswd = class;
 
   TEvPasswordError = (peInput, peRecognize);
-  TEvValidateEvent = procedure (Sender: TObject; UserName, Password: string; var Valid: Boolean) of object;
+  TEvValidateEvent = procedure (Sender: TObject; UserName, Password: string;
+    var Valid: Boolean) of object;
   TEvErrorEvent = procedure (Sender: TObject; Error: TEvPasswordError) of object;
 
   TEvPassword = class(TComponent)
@@ -42,8 +43,6 @@ type
     FOldMsgEvent: TMessageEvent;
     FOnBeforeInput: TNotifyEvent;
     FOnAfterInput: TNotifyEvent;
-    FOnFailRecognize: TNotifyEvent;
-    FOnRecognized: TNotifyEvent;
     FOnValidate: TEvValidateEvent;
     FOnError: TEvErrorEvent;
     // variáveis adicionais
@@ -74,14 +73,12 @@ type
     property MaxLenUserName: Integer read FMaxLenUserName write FMaxLenUserName default 0;
     property PasswordChar: Char read FPasswordChar write FPasswordChar default '*';
     property Picture: TPicture read FPicture write SetPicture;
-    property ShowOnCreate: Boolean read FShowOnCreate write FShowOnCreate default True;
+    property ShowOnCreate: Boolean read FShowOnCreate write FShowOnCreate default False;
     property Text: string read FText write SetText;
     property TimeOut: Integer read FTimeOut write FTimeOut default 180;
     property TryCount: Byte read FTryCount write FTryCount default 3;
     property OnAfterInput: TNotifyEvent read FOnAfterInput write FOnAfterInput;
     property OnBeforeInput: TNotifyEvent read FOnBeforeInput write FOnBeforeInput;
-    property OnFailRecognize: TNotifyEvent read FOnFailRecognize write FOnFailRecognize;
-    property OnRecognized: TNotifyEvent read FOnRecognized write FOnRecognized;
     property OnValidate: TEvValidateEvent read FOnValidate write FOnValidate;
     property OnError: TEvErrorEvent read FOnError write FOnError;
   end;
@@ -104,10 +101,7 @@ type
     procedure FormActivate(Sender: TObject);
     procedure EdtsChange(Sender: TObject);
     procedure BtnOKClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    FTopForm: TForm;
     procedure ActiveFocus;
     procedure DeleteIndicator(Rich: TRichEdit; Index: Integer);
     procedure RenderText(Rich: TRichEdit);
@@ -159,26 +153,6 @@ begin
 end;
 
 
-// FormShow
-procedure TEvFrmPaswd.FormShow(Sender: TObject);
-begin
-  FTopForm := nil;
-  if (Screen.ActiveForm <> nil) and (Screen.ActiveForm.FormStyle = fsStayOnTop) then
-    begin
-      Screen.ActiveForm.FormStyle := fsNormal;
-      FTopForm := Screen.ActiveForm;
-    end;
-end;
-
-
-// FormClose
-procedure TEvFrmPaswd.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  if (FTopForm <> nil) then
-    FTopForm.FormStyle := fsNormal;
-end;
-
-
 // ActiveFocus
 procedure TEvFrmPaswd.ActiveFocus;
 begin
@@ -212,17 +186,7 @@ begin
   if FStatusForm = SF_RECOGNIZING then
     begin
       if EdtPaswd.Text = FComponent.Password then
-        begin
-          Valid := True;
-          if Assigned(FComponent.FOnRecognized) then
-            FComponent.FOnRecognized(Self);
-        end
-      else if Assigned(FComponent.FOnFailRecognize) then
-        begin
-          EdtPaswd.Text := '';
-          if (FComponent.TryCount <> 0) and (FLoopCount < FComponent.TryCount) then
-            FComponent.FOnFailRecognize(Self);
-        end
+        Valid := True
       else
         begin
           MessageBeep(0);
@@ -280,7 +244,6 @@ begin
     end
   else
     begin
-      RichMessage.Font.Assign(FComponent.Font);
       RichMessage.Text := FComponent.Text;
       RenderText(RichMessage);
       RichMessage.SetBounds(20, 15, ClientWidth - 20, 13);
@@ -370,7 +333,7 @@ begin
   FPicture := TPicture.Create;
   FPicture.Bitmap.Handle := LoadBitmap(HInstance, 'LOGIN_ICON');
   FRecognizeUser := False;
-  FShowOnCreate := True;
+  FShowOnCreate := False;
   FText := SMessage;
   FTimeOut := 180;
   FTryCount := 3;
@@ -404,7 +367,7 @@ begin
   CancelRecognizeUser;
   if not (csDesigning in ComponentState) and (FrmPaswd <> nil) and
     not (csDestroying in FrmPaswd.ComponentState) then
-    FrmPaswd.Free;
+    FreeAndNil(FrmPaswd);
   FFont.Free;
   FPicture.Free;
   inherited Destroy;
@@ -549,7 +512,7 @@ end;
 // Register
 procedure Register;
 begin
-  {$IFDEF VER330}
+  {$IFDEF VER300}
   RegisterComponents('TCF Add', [TEvPassword]);
   {$ENDIF}
 end;

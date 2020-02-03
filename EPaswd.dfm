@@ -11,12 +11,9 @@ object EvFrmPaswd: TEvFrmPaswd
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  FormStyle = fsStayOnTop
   OldCreateOrder = False
   Position = poScreenCenter
   OnActivate = FormActivate
-  OnClose = FormClose
-  OnShow = FormShow
   DesignSize = (
     364
     219)
@@ -2141,7 +2138,6 @@ object EvFrmPaswd: TEvFrmPaswd
       ParentCtl3D = False
       ParentFont = False
       TabOrder = 0
-      Zoom = 100
     end
     object PanLine: TPanel
       Left = 0
